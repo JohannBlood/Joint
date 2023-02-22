@@ -1,17 +1,18 @@
 from random import choice
 import argparse
 import urllib.request
+import cowsay
 
 
 def my_ask(prompt: str, valid: list[str] = None):
     while True:
-        a = input(prompt)
+        a = input(cowsay.cowsay(prompt, cow=cowsay.get_random_cow()) + '\n')
         if not valid or a in valid or a == 'qwerty':
             return a
 
 
 def my_inform(format_string: str, bulls: int, cows: int):
-    print(format_string.format(bulls, cows))
+    print(cowsay.cowsay(format_string.format(bulls, cows), cow=cowsay.get_random_cow()))
 
 
 def bullscows(guess: str, secret: str):
@@ -55,6 +56,6 @@ if __name__ == "__main__":
             d = list(filter(lambda x: len(x) == args.length, data.split()))
         else:
             d = list(filter(lambda x: len(x) == args.length, data.decode().split()))
-    print(d[:10])
+    # print(d[:10])
     gameplay(my_ask, my_inform, d)
 # my_inform("Быки: {}, Коровы: {}", 1, 2)
