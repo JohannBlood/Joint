@@ -2,11 +2,12 @@ from random import choice
 import argparse
 import urllib.request
 import cowsay
+from io import StringIO
 
 
 def my_ask(prompt: str, valid: list[str] = None):
     while True:
-        a = input(cowsay.cowsay(prompt, cow=cowsay.get_random_cow()) + '\n')
+        a = input(cowsay.cowsay(prompt, cowfile=cow) + '\n')
         if not valid or a in valid or a == 'qwerty':
             return a
 
@@ -41,6 +42,16 @@ def gameplay(ask: callable, inform: callable, words: list[str]):
 
 
 if __name__ == "__main__":
+    cow = cowsay.read_dot_cow(StringIO("""
+    $the_cow = <<EOC;
+            $thoughts
+             $thoughts
+               ___
+              (o o)
+             (  V  )
+            /--m-m-
+    EOC
+    """))
     parser = argparse.ArgumentParser()
     parser.add_argument('dictionary', type=str)
     parser.add_argument('length', type=int, nargs='?', default=5)
