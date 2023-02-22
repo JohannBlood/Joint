@@ -55,6 +55,6 @@ if __name__ == "__main__":
             d = list(filter(lambda x: len(x) == args.length, data.split()))
         else:
             d = list(filter(lambda x: len(x) == args.length, data.decode().split()))
-    print(d[:10])
+    # print(d[:10])
     gameplay(my_ask, my_inform, d)
 # my_inform("Быки: {}, Коровы: {}", 1, 2)
