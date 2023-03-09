@@ -9,6 +9,10 @@ class Cmdline(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.prompt = '>>>>> '
         self.intro = 'Welcome to Cowsay! Type help or? to list commands.\n'
+
+    def do_list_cows(self, arg):
+        """Lists all the cow file names. No arguments."""
+        print(*list_cows())
     
     def do_cowsay(self, args):
         '''
