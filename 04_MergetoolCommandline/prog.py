@@ -1,7 +1,27 @@
 import sys
-from cowsay import cowsay, list_cows
+from cowsay import cowsay, list_cows, make_bubble
 import cmd
 import shlex
+from dataclasses import dataclass
+
+
+@dataclass
+class Bubble:
+    stem: str = '\\'
+    l: str = '<'
+    r: str = '>'
+    tl: str = '/'
+    tr: str = '\\'
+    ml: str = '|'
+    mr: str = '|'
+    bl: str = '\\'
+    br: str = '/'
+
+
+THOUGHT_OPTIONS = {
+    'cowsay': Bubble('\\', '<', '>', '/', '\\', '|', '|', '\\', '/'),
+    'cowthink': Bubble('o', '(', ')', '(', ')', '(', ')', '(', ')'),
+}
 
 
 class Cmdline(cmd.Cmd):
@@ -13,6 +33,34 @@ class Cmdline(cmd.Cmd):
     def do_list_cows(self, arg):
         """Lists all the cow file names. No arguments."""
         print(*list_cows())
+
+    def do_make_bubble(self, arg):
+        """
+        Wraps text is wrap_text is true, then pads text and sets inside a bubble.
+        This is the text that appears above the cows  
+        Arguments:
+        text - The text to be wraped (positional argument);
+        -b - Cowthink or cowsay (optional);
+        -w - Width (optional);
+        -t - Wrap or not (optional).
+        """
+        try:
+            text, *args = shlex.split(arg)
+            wrap_text = True
+            width = 40
+            brackets = THOUGHT_OPTIONS['cowsay']
+            for ind, el in enumerate(args):
+                if args[ind] == '-b':
+                    brackets = THOUGHT_OPTIONS[args[ind + 1]]
+                elif args[ind] == '-w':
+                    width = int(args[ind + 1])
+                elif args[ind] == '-t':
+                    wrap_text = eval(args[ind + 1])
+            print(make_bubble(text, brackets=brackets, width=width, wrap_text=wrap_text))
+        except Exception as e:
+            print('Wrong arguments')
+        
+
     
     def do_cowsay(self, args):
         '''
