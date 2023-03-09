@@ -111,6 +111,28 @@ class Cmdline(cmd.Cmd):
             print(cowthink(message, cow=cow, eyes=eyes, tongue=tongue))
         except Exception as e:
             print('Wrong arguments')
+        
+    def do_exit(self, arg):
+        """Exits the program."""
+        return 1
+    
+    def complete_cowsay(self, text, line, begidx, endidx):
+        if line[begidx - 3: begidx - 1] == '-e':
+            return [s for s in ['00', 'xx', 'oo', '||'] if s.startswith(text)]
+        if line[begidx - 3: begidx - 1] == '-t':
+            return [s for s in ['0 ', ' 0', ' v', 'v '] if s.startswith(text)]
+        if line[begidx - 3: begidx - 1] == '-c':
+            return [s for s in list_cows() if s.startswith(text)]
+        return []
+    
+    def complete_cothink(self, text, line, begidx, endidx):
+        if line[begidx - 3: begidx - 1] == '-e':
+            return [s for s in ['00', 'xx', 'oo', '||'] if s.startswith(text)]
+        if line[begidx - 3: begidx - 1] == '-t':
+            return [s for s in ['0 ', ' 0', ' v', 'v '] if s.startswith(text)]
+        if line[begidx - 3: begidx - 1] == '-c':
+            return [s for s in list_cows() if s.startswith(text)]
+        return []
 
 
 
