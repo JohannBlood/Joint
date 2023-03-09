@@ -133,6 +133,13 @@ class Cmdline(cmd.Cmd):
         if line[begidx - 3: begidx - 1] == '-c':
             return [s for s in list_cows() if s.startswith(text)]
         return []
+    
+    def complete_make_bubble(self, text, line, begidx, endidx):
+        if line[begidx - 3: begidx - 1] == '-b':
+            return [s for s in ['cowsay', 'cowthink'] if s.startswith(text)]
+        if line[begidx - 3: begidx - 1] == '-t':
+            return [s for s in ['True', 'False'] if s.startswith(text)]
+        return []
 
 
 
