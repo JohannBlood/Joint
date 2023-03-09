@@ -1,5 +1,5 @@
 import sys
-from cowsay import cowsay, list_cows, make_bubble
+from cowsay import cowsay, list_cows, make_bubble, cowthink
 import cmd
 import shlex
 from dataclasses import dataclass
@@ -71,18 +71,47 @@ class Cmdline(cmd.Cmd):
         -e - The eyes of the cow (optional);
         -t - The tongue of the cow (optional).
         '''
-        message, *args = shlex.split(args)
-        cow = 'default'
-        eyes = 'oo'
-        tongue = '  '
-        for ind, el in enumerate(args):
-            if el == '-c':
-                cow = args[ind+1]
-            if el == '-e':
-                eyes = args[ind+1]
-            if el == '-t':
-                tongue = args[ind+1]
-        print(cowsay(message, cow=cow, eyes=eyes, tongue=tongue))
+        try:
+            message, *args = shlex.split(args)
+            cow = 'default'
+            eyes = 'oo'
+            tongue = '  '
+            for ind, el in enumerate(args):
+                if el == '-c':
+                    cow = args[ind+1]
+                if el == '-e':
+                    eyes = args[ind+1]
+                if el == '-t':
+                    tongue = args[ind+1]
+            print(cowsay(message, cow=cow, eyes=eyes, tongue=tongue))
+        except Exception as e:
+            print('Wrong arguments')
+    
+    def do_cowthink(self, args):
+        '''
+        Cowsay  generates  an ASCII picture of a cow saying something provided by the user.  
+        Arguments:
+        message - The message to be cowsayed (positional argument);
+        -c - Cow's name (optional);
+        -e - The eyes of the cow (optional);
+        -t - The tongue of the cow (optional).
+        '''
+        try:
+            message, *args = shlex.split(args)
+            cow = 'default'
+            eyes = 'oo'
+            tongue = '  '
+            for ind, el in enumerate(args):
+                if el == '-c':
+                    cow = args[ind+1]
+                if el == '-e':
+                    eyes = args[ind+1]
+                if el == '-t':
+                    tongue = args[ind+1]
+            print(cowthink(message, cow=cow, eyes=eyes, tongue=tongue))
+        except Exception as e:
+            print('Wrong arguments')
+
 
 
 
