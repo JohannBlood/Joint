@@ -1,29 +1,53 @@
 import asyncio
+import shlex
+import cowsay
 
 clients = {}
 
 async def chat(reader, writer):
-    me = "{}:{}".format(*writer.get_extra_info('peername'))
-    print(me)
-    clients[me] = asyncio.Queue()
+    temp = asyncio.Queue()
     send = asyncio.create_task(reader.readline())
-    receive = asyncio.create_task(clients[me].get())
+    receive = asyncio.create_task(temp.get())
+    fl = True
+    # Registration
+    while not reader.at_eof() and fl:
+        requests, pending = await asyncio.wait([send, receive], return_when=asyncio.FIRST_COMPLETED)
+        for request in requests:
+            if request is send:
+                send = asyncio.create_task(reader.readline())
+                # print(request.result().decode().strip())
+                if request.result().decode().startswith('login'):
+                    name = shlex.split(request.result().decode())[1]
+                    if name not in clients.keys() and name in cowsay.list_cows():
+                        clients[name] = temp
+                        print(f'{name} has joined the chat')
+                        await temp.put('Registration successful')
+                        fl = False
+                    elif name in clients.keys() and name in cowsay.list_cows():
+                        await temp.put(f'{name} is already in the chat')
+                    else:
+                        await temp.put(f'{name} is not a cow')
+            elif request is receive:
+                receive = asyncio.create_task(temp.get())
+                writer.write(f"{request.result()}\n".encode())
+                await writer.drain()
+    # Chatting
     while not reader.at_eof():
         done, pending = await asyncio.wait([send, receive], return_when=asyncio.FIRST_COMPLETED)
         for q in done:
             if q is send:
                 send = asyncio.create_task(reader.readline())
                 for out in clients.values():
-                    if out is not clients[me]:
-                        await out.put(f"{me} {q.result().decode().strip()}")
+                    if out is not clients[name]:
+                        await out.put(f"{name} {q.result().decode().strip()}")
             elif q is receive:
-                receive = asyncio.create_task(clients[me].get())
+                receive = asyncio.create_task(clients[name].get())
                 writer.write(f"{q.result()}\n".encode())
                 await writer.drain()
     send.cancel()
     receive.cancel()
-    print(me, "DONE")
-    del clients[me]
+    print(name, "DONE")
+    del clients[name]
     writer.close()
     await writer.wait_closed()
 
