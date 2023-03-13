@@ -22,6 +22,7 @@ async def chat(reader, writer):
                         clients[name] = temp
                         print(f'{name} has joined the chat')
                         await temp.put('Registration successful')
+                        me = name
                         fl = False
                     elif name in clients.keys() and name in cowsay.list_cows():
                         await temp.put(f'{name} is already in the chat')
@@ -41,17 +42,27 @@ async def chat(reader, writer):
         for q in done:
             if q is send:
                 send = asyncio.create_task(reader.readline())
-                for out in clients.values():
-                    if out is not clients[name]:
-                        await out.put(f"{name} {q.result().decode().strip()}")
+                if q.result().decode().startswith('say'):
+                    _, name, message = shlex.split(q.result().decode())
+                    if name in clients.keys():
+                        clients[name].put_nowait(f'Private from {me}: {message}')
+                    else:
+                        clients[me].put_nowait('No such user')
+                elif q.result().decode().startswith('yield'):
+                    _, message = shlex.split(q.result().decode())
+                    for out in clients.values():
+                        if out is not clients[me]:
+                            await out.put(f"{me}: {message}")
+                else:
+                    clients[me].put_nowait('No such command')
             elif q is receive:
                 receive = asyncio.create_task(clients[name].get())
                 writer.write(f"{q.result()}\n".encode())
                 await writer.drain()
     send.cancel()
     receive.cancel()
-    print(name, "DONE")
-    del clients[name]
+    print(me, "DONE")
+    del clients[me]
     writer.close()
     await writer.wait_closed()
 
