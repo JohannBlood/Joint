@@ -24,6 +24,7 @@ async def chat(reader, writer):
                         await temp.put('Registration successful')
                         me = name
                         fl = False
+                        fl1 = True
                     elif name in clients.keys() and name in cowsay.list_cows():
                         await temp.put(f'{name} is already in the chat')
                     else:
@@ -32,12 +33,18 @@ async def chat(reader, writer):
                     await temp.put(' '.join(clients.keys()))
                 elif request.result().decode().strip() == 'cows':
                     await temp.put(' '.join(set(cowsay.list_cows()) - set(clients.keys())))
+                elif request.result().decode().strip() == 'quit':
+                    fl1 = False
+                    fl = False
+                    me = None
+                else:
+                    temp.put('No such command')
             elif request is receive:
                 receive = asyncio.create_task(temp.get())
                 writer.write(f"{request.result()}\n".encode())
                 await writer.drain()
     # Chatting
-    while not reader.at_eof():
+    while not reader.at_eof() and fl1:
         done, pending = await asyncio.wait([send, receive], return_when=asyncio.FIRST_COMPLETED)
         for q in done:
             if q is send:
@@ -53,16 +60,23 @@ async def chat(reader, writer):
                     for out in clients.values():
                         if out is not clients[me]:
                             await out.put(f"{me}: {message}")
+                elif q.result().decode().strip() == 'who':
+                    await temp.put(' '.join(clients.keys()))
+                elif q.result().decode().strip() == 'cows':
+                    await temp.put(' '.join(set(cowsay.list_cows()) - set(clients.keys())))
+                elif q.result().decode().strip() == 'quit':
+                    fl1 = False
                 else:
                     clients[me].put_nowait('No such command')
             elif q is receive:
                 receive = asyncio.create_task(clients[name].get())
                 writer.write(f"{q.result()}\n".encode())
                 await writer.drain()
+    if me:
+        print(me, "DONE")
+        del clients[me]
     send.cancel()
     receive.cancel()
-    print(me, "DONE")
-    del clients[me]
     writer.close()
     await writer.wait_closed()
 
