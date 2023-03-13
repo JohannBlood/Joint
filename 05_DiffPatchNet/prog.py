@@ -27,6 +27,10 @@ async def chat(reader, writer):
                         await temp.put(f'{name} is already in the chat')
                     else:
                         await temp.put(f'{name} is not a cow')
+                elif request.result().decode().strip() == 'who':
+                    await temp.put(' '.join(clients.keys()))
+                elif request.result().decode().strip() == 'cows':
+                    await temp.put(' '.join(set(cowsay.list_cows()) - set(clients.keys())))
             elif request is receive:
                 receive = asyncio.create_task(temp.get())
                 writer.write(f"{request.result()}\n".encode())
