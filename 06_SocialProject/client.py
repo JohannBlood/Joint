@@ -14,7 +14,17 @@ BOARD_SIZE = 10
 def reciever(cmdline):
     while True:
         if not LOCK.locked():
-            msg = s.recv(1024).decode().strip()
+            msg = s.recv(2048).decode().strip()
+            # print('wtf', LOCK.locked(), msg)
+            if not msg:
+                break
+            if msg.startswith('#'):
+                # print('#', LOCK.locked(), msg)
+                cmdline.cows = msg[1:]
+                continue
+            elif msg.startswith('\\'):
+                cmdline.who = msg[1:]
+                continue
             if msg == 'Leaving the chat':
                 print('\nLeaving the chat')
                 break
@@ -37,6 +47,8 @@ class CmdLine(cmd.Cmd):
         self.intro = "<<< Social Project >>>\n"
         self.intro += 'Type help or ? to list commands\n'
         self.intro += 'Type exit to quit\n'
+        self.cows = None
+        self.who = None
 
     def do_who(self, arg):
         """Prints list of registered users. No arguments"""
@@ -50,7 +62,13 @@ class CmdLine(cmd.Cmd):
     
     def do_login(self, arg):
         """Connects client to server. Name - positional argument"""
-        s.send(f'login {arg}\n'.encode())
+        try:
+            if arg:
+                s.send(f'login {arg}\n'.encode())
+            else:
+                raise InvalidParams
+        except InvalidParams:
+            print('Invalid arguments')
         # reciever(s.recv(1024).decode().strip())
 
     def do_say(self, arg):
@@ -66,6 +84,7 @@ Args:
 
     def do_exit(self, arg):
         """Exits the game"""
+        s.send(f'quit\n'.encode())
         return 1
     
     def do_yield(self, args):
@@ -81,15 +100,24 @@ Arguments:
         s.send(f'quit\n'.encode())
         return 1
 
-    def complete_attack(self, text, line, begidx, endidx):
-        if line[begidx - 7: begidx - 1] == 'attack':
-            return [x for x in cowsay.list_cows() + ['jgsbat'] if x.startswith(text)]
-        if line[begidx - 5: begidx - 1] == 'with':
-            return [s for s in ['sword', 'spear', 'axe'] if s.startswith(text)]
+    def complete_login(self, text, line, begidx, endidx):
+        s.send(f'#cows\n'.encode())
+        # print(cows)
+        while not self.cows:
+            pass
+        cows = shlex.split(self.cows)
+        self.cows = None
+        return [s for s in cows if s.startswith(text)]
         
-    def complete_addmon(self, text, line, begidx, endidx):
-        if line[begidx - 7: begidx - 1] == 'addmon':
-            return [x for x in cowsay.list_cows() + ['jgsbat'] if x.startswith(text)]
+    def complete_say(self, text, line, begidx, endidx):
+        if line[:begidx] == 'say ':
+            s.send(f'#who\n'.encode())
+            # print(cows)
+            while not self.who:
+                pass
+            who = shlex.split(self.who)
+            self.who = None
+            return [s for s in who if s.startswith(text)]
 
 
 if __name__ == '__main__':

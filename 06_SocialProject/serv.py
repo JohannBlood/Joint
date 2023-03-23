@@ -31,6 +31,10 @@ async def chat(reader, writer):
                         await temp.put(f'{name} is not a cow')
                 elif request.result().decode().strip() == 'who':
                     await temp.put(' '.join(clients.keys()))
+                elif request.result().decode().strip() == '#who':
+                    await temp.put('\\' + ' '.join(clients.keys()))
+                elif request.result().decode().strip() == '#cows':
+                    await temp.put('#' + ' '.join(set(cowsay.list_cows()) - set(clients.keys())))
                 elif request.result().decode().strip() == 'cows':
                     await temp.put(' '.join(set(cowsay.list_cows()) - set(clients.keys())))
                 elif request.result().decode().strip() == 'quit':
@@ -62,6 +66,10 @@ async def chat(reader, writer):
                             await out.put(f"{cowsay.cowsay(message, cow=me)}")
                 elif q.result().decode().strip() == 'who':
                     await clients[me].put(' '.join(clients.keys()))
+                elif q.result().decode().strip() == '#who':
+                    await clients[me].put('\\' + ' '.join(clients.keys()))
+                elif q.result().decode().strip() == '#cows':
+                    await clients[me].put('#' + ' '.join(set(cowsay.list_cows()) - set(clients.keys())))
                 elif q.result().decode().strip() == 'cows':
                     await clients[me].put(' '.join(set(cowsay.list_cows()) - set(clients.keys())))
                 elif q.result().decode().strip() == 'quit':
@@ -84,7 +92,7 @@ async def chat(reader, writer):
     await writer.wait_closed()
 
 async def main():
-    server = await asyncio.start_server(chat, '0.0.0.0', 1338)
+    server = await asyncio.start_server(chat, '0.0.0.0', 1337)
     async with server:
         await server.serve_forever()
 
