@@ -13,8 +13,11 @@ BOARD_SIZE = 10
 
 def reciever(cmdline):
     while True:
-        if not LOCK:
+        if not LOCK.locked():
             msg = s.recv(1024).decode().strip()
+            if msg == 'Leaving the chat':
+                print('\nLeaving the chat')
+                break
             print(f'\n{msg}\n{cmdline.prompt}{readline.get_line_buffer()}', end='', flush=True)
 
     
@@ -38,17 +41,17 @@ class CmdLine(cmd.Cmd):
     def do_who(self, arg):
         """Prints list of registered users. No arguments"""
         s.send('who\n'.encode())
-        reciever(s.recv(1024).decode().strip())
+        # reciever(s.recv(1024).decode().strip())
 
     def do_cows(self, arg):
         """Prints list of available usernames. No arguments"""
-        s.send('down\n'.encode())
-        reciever(s.recv(1024).decode().strip())
+        s.send('cows\n'.encode())
+        # reciever(s.recv(1024).decode().strip())
     
     def do_login(self, arg):
         """Connects client to server. Name - positional argument"""
-        s.send('left\n'.encode())
-        reciever(s.recv(1024).decode().strip())
+        s.send(f'login {arg}\n'.encode())
+        # reciever(s.recv(1024).decode().strip())
 
     def do_say(self, arg):
         """
@@ -57,8 +60,9 @@ Args:
     name - recipient's username (positional)
     text - message to send (positional)
         """
-        s.send('right\n'.encode())
-        reciever(s.recv(1024).decode().strip())
+        name, text = shlex.split(arg)
+        s.send(f'say {name} "{text}"\n'.encode())
+        # reciever(s.recv(1024).decode().strip())
 
     def do_exit(self, arg):
         """Exits the game"""
@@ -70,50 +74,12 @@ Sends a message to all users in the chat.
 Arguments:
     text - The message to send (positional)
         """
-        try:
-            name, *args = shlex.split(args)
-            x, y = args[args.index('coords') + 1], args[args.index('coords') + 2]
-            hp, hello = args[args.index('hp') + 1], args[args.index('hello') + 1]
-            if int(x) not in range(BOARD_SIZE) or int(y) not in range(BOARD_SIZE) or int(hp) <= 0:
-                raise InvalidParams
-            s.send(f'addmon {int(x)} {int(y)} "{name}" "{hello}" {int(hp)}\n'.encode())
-            print(s.recv(1024).decode().strip())
-        except InvalidCommand:
-            print('Invalid command')
-        except InvalidParams:
-            print('Invalid argument')
-        except Exception as e:
-            print(e)
+        s.send(f'yield "{args}"\n'.encode())
     
     def do_quit(self, arg):
         """Disconnect from server"""
-        try:
-            if not arg:
-                raise InvalidParams
-            name, *arg = shlex.split(arg)
-            if arg:
-                weapon = arg[1]
-                match weapon:
-                    case 'sword':
-                        s.send(f'attack {10} {name}\n'.encode())
-                        print(s.recv(1024).decode().strip())
-                    case 'spear':
-                        s.send(f'attack {15} {name}\n'.encode())
-                        print(s.recv(1024).decode().strip())
-                    case 'axe':
-                        s.send(f'attack {20} {name}\n'.encode())
-                        print(s.recv(1024).decode().strip())
-                    case _:
-                        print("Unknown weapon")
-            else:
-                s.send(f'attack {10} {name}\n'.encode())
-                print(s.recv(1024).decode().strip())
-        except InvalidCommand:
-            print('Invalid command')
-        except InvalidParams:
-            print('Invalid argument')
-        except Exception as e:
-            print(e)
+        s.send(f'quit\n'.encode())
+        return 1
 
     def complete_attack(self, text, line, begidx, endidx):
         if line[begidx - 7: begidx - 1] == 'attack':
@@ -137,7 +103,7 @@ if __name__ == '__main__':
             except:
                 pass
             cmdline = CmdLine()
-            recive = threading.Thread(target=reciever, args=(cmdline))
+            recive = threading.Thread(target=reciever, args=(cmdline,))
             recive.start()
             cmdline.cmdloop()
             readline.write_history_file()

@@ -38,7 +38,7 @@ async def chat(reader, writer):
                     fl = False
                     me = None
                 else:
-                    await temp.put('No such command')
+                    await temp.put('Complete registration first')
             elif request is receive:
                 receive = asyncio.create_task(temp.get())
                 writer.write(f"{request.result()}\n".encode())
@@ -66,6 +66,7 @@ async def chat(reader, writer):
                     await clients[me].put(' '.join(set(cowsay.list_cows()) - set(clients.keys())))
                 elif q.result().decode().strip() == 'quit':
                     fl1 = False
+                    break
                 else:
                     await clients[me].put('No such command')
             elif q is receive:
@@ -75,13 +76,15 @@ async def chat(reader, writer):
     if me:
         print(me, "DONE")
         del clients[me]
+    writer.write('Leaving the chat'.encode())
+    await writer.drain()
     send.cancel()
     receive.cancel()
     writer.close()
     await writer.wait_closed()
 
 async def main():
-    server = await asyncio.start_server(chat, '0.0.0.0', 1337)
+    server = await asyncio.start_server(chat, '0.0.0.0', 1338)
     async with server:
         await server.serve_forever()
 
